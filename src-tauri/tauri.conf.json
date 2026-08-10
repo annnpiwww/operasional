@@ -12,6 +12,7 @@
   "app": {
     "windows": [
       {
+        "label": "main",
         "title": "PT Bahana Security Sistem - Operational Automation",
         "width": 1280,
         "height": 800,
