@@ -7,17 +7,17 @@ echo ===============================================================
 echo.
 
 IF NOT EXIST "node_modules\" (
-  echo [!] Dependencies (react, express, playwright) belum ter-install.
-  echo [!] Menjalankan 'npm install' otomatis... Sila tunggu sebentar...
-  echo.
+  echo [!] Dependencies belum ter-install. Menjalankan 'npm install'...
   call npm install
-  echo [OK] Dependencies berhasil ter-install!
   echo.
 )
 
-echo [1/2] Memulai Backend Automation Server & React Dashboard...
-echo [2/2] Membuka browser ke http://localhost:3000 ...
-echo.
+echo [1/2] Memulai Server Backend (Port 3101)...
+start "Backend API Server" /min cmd /c "node server/index.js"
+
+echo [2/2] Memulai Dashboard Frontend (Port 3000)...
+timeout /t 2 >nul
 start http://localhost:3000
-npm run start
+call npx vite --port 3000 --host 0.0.0.0
+
 pause
