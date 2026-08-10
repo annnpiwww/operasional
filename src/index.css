@@ -1,0 +1,131 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Dark editorial ops theme — user spec */
+  --ink-950: 9 13 22; /* #090d16 */
+  --ink-900: 18 24 38; /* #121826 */
+  --ink-850: 26 34 50; /* #1a2232 */
+  --ink-800: 35 45 63; /* #232d3f */
+  --line: 30 41 59; /* #1e293b */
+  --line-soft: 24 32 48; /* #182030 */
+  --text-hi: 226 232 240; /* slate-200 */
+  --text-mid: 148 163 184; /* slate-400 */
+  --text-low: 100 116 139; /* slate-500 */
+  --amber: 255 159 10;
+  --emerald: 52 211 153;
+  --red: 248 113 113;
+  --blue: 96 165 250;
+}
+
+html {
+  color-scheme: dark;
+}
+
+body {
+  @apply bg-ink-950 font-sans text-hi antialiased;
+  background-image:
+    radial-gradient(900px 420px at 85% -10%, rgb(var(--amber) / 0.045), transparent 60%),
+    radial-gradient(760px 400px at -10% 110%, rgb(var(--blue) / 0.045), transparent 60%);
+}
+
+::selection {
+  background: rgb(var(--amber) / 0.25);
+}
+
+:focus-visible {
+  outline: 2px solid rgb(var(--amber) / 0.9);
+  outline-offset: 2px;
+}
+
+@layer components {
+  .panel {
+    @apply rounded-xl border border-line bg-ink-900;
+    box-shadow:
+      inset 0 1px 0 0 rgb(var(--line-soft)),
+      0 1px 2px 0 rgb(0 0 0 / 0.4);
+  }
+
+  .label {
+    @apply text-[11px] font-semibold uppercase tracking-[0.14em] text-low;
+  }
+
+  .input {
+    @apply w-full rounded-lg border border-line bg-ink-850 px-3 py-2.5 text-sm text-hi transition-colors placeholder:text-low/70 hover:border-[#313a4e] focus:border-accent/60 focus:outline-none;
+  }
+
+  .btn {
+    @apply inline-flex items-center justify-center gap-1.5 rounded-lg border px-3.5 py-2.5 text-xs font-semibold transition-colors disabled:cursor-not-allowed disabled:border-line disabled:bg-ink-800 disabled:text-low;
+  }
+  .btn-accent {
+    @apply btn border-accent/40 bg-accent/10 text-accent hover:bg-accent/20;
+  }
+  .btn-solid {
+    @apply btn border-transparent bg-accent text-ink-950 hover:bg-[#ffb224];
+  }
+  .btn-ghost {
+    @apply btn border-line bg-ink-850 text-hi hover:bg-ink-800;
+  }
+
+  .seg {
+    @apply flex items-center gap-1 rounded-lg border border-line bg-ink-850 p-1;
+  }
+  .seg-btn {
+    @apply flex-1 whitespace-nowrap rounded-md px-2 py-1.5 text-[11px] font-semibold transition-colors;
+  }
+  .seg-btn-active {
+    @apply bg-accent/15 text-accent;
+  }
+  .seg-btn-idle {
+    @apply text-mid hover:bg-ink-800 hover:text-hi;
+  }
+}
+
+/* Modal motion — no external plugin needed */
+@keyframes backdrop-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes modal-in {
+  from { opacity: 0; transform: translateY(12px) scale(0.98); }
+  to { opacity: 1; transform: none; }
+}
+.animate-backdrop {
+  animation: backdrop-in 180ms ease-out both;
+}
+.animate-modal {
+  animation: modal-in 240ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.hazard-stripe {
+  background: repeating-linear-gradient(
+    -45deg,
+    rgb(var(--amber)) 0 9px,
+    rgb(var(--ink-950)) 9px 18px
+  );
+}
+
+.term-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgb(var(--line)) transparent;
+}
+.term-scroll::-webkit-scrollbar {
+  width: 10px;
+}
+.term-scroll::-webkit-scrollbar-thumb {
+  background: rgb(var(--line));
+  border: 3px solid rgb(var(--ink-900));
+  border-radius: 8px;
+}
+.term-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-backdrop,
+  .animate-modal,
+  .animate-pulse {
+    animation: none;
+  }
+}
