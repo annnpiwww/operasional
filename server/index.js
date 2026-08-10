@@ -44,7 +44,7 @@ app.post('/api/automate', async (req, res) => {
 });
 
 app.post('/api/automate-all', async (req, res) => {
-  const { date, spreadsheetUrl } = req.body;
+  const { date, spreadsheetUrl, outlets } = req.body;
   const logs = [];
   const logCallback = (msg) => {
     console.log(msg);
@@ -52,7 +52,7 @@ app.post('/api/automate-all', async (req, res) => {
   };
 
   try {
-    const result = await runAllOutletsAutomation({ date, spreadsheetUrl }, logCallback);
+    const result = await runAllOutletsAutomation({ date, spreadsheetUrl, outlets }, logCallback);
     res.json({ success: true, logs, incomes: result.incomes });
   } catch (err) {
     res.status(500).json({

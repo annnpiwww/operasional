@@ -181,6 +181,41 @@ export default function App() {
     }
   }
 
+  // Playwright Group Outlets Sync (per PIC)
+  const handleSyncGroup = async (outlets: OutletCode[], label: string) => {
+    setBusy(true)
+    addLog('running', 'mulai', `Memulai Playwright group sync ${label} (${outlets.length} lokasi, ${headerInfo.tanggalLaporan})`)
+
+    try {
+      const res = await fetch('http://localhost:3101/api/automate-all', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          date: headerInfo.tanggalLaporan,
+          spreadsheetUrl: headerInfo.spreadsheetUrl,
+          outlets,
+        }),
+      })
+
+      const data = await res.json()
+      if (res.ok && data.success) {
+        if (Array.isArray(data.logs)) {
+          data.logs.forEach((msg: string) => addLog('running', 'step', msg))
+        }
+        if (Array.isArray(data.incomes)) {
+          setIncomes(data.incomes)
+        }
+        addLog('success', 'selesai', `✅ Sync ${label} (${outlets.length} lokasi) berhasil!`)
+      } else {
+        addLog('failed', 'error', `Gagal group sync: ${data.message || 'Server error'}`)
+      }
+    } catch (err: any) {
+      addLog('failed', 'net_err', `Network error: ${err.message}`)
+    } finally {
+      setBusy(false)
+    }
+  }
+
   return (
     <div className="min-h-screen">
       {/* Top Navbar Header */}
@@ -262,6 +297,7 @@ export default function App() {
                 onSelectOutlet={setSelectedOutlet}
                 onSyncSingle={handleSyncSingle}
                 onSyncAll={handleSyncAll}
+                onSyncGroup={handleSyncGroup}
                 isSyncing={busy}
                 hasData={incomes.length > 0}
               />

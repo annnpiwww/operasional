@@ -11,12 +11,37 @@ export interface Outlet {
 
 export const OUTLETS: Outlet[] = [
   'TBM', 'NBM', 'PBM', 'PPM', 'PKM', 'MPP',
-  'MGKB', 'MGAM', 'MGMM', 'MGNW', 'MGTO', 'MGBP', 'MGLG',
+  'MGKB', 'MGAM', 'MGMM', 'MGNW', 'MGTO', 'MGGJ', 'MGBP', 'MGLG',
   'MGMP', 'MGMK', 'MGJY', 'MGNS', 'MGRA', 'MGSO',
 ].map((code, i) => ({
   code: code as OutletCode,
   label: `Post ${String(i + 1).padStart(2, '0')} · Operasional`,
 }));
+
+// ====== PIC GROUPING (Sync per Lokasi) ======
+export interface PICGroup {
+  id: string;
+  pic: string;
+  outlets: OutletCode[];
+}
+
+export const PIC_GROUPS: PICGroup[] = [
+  {
+    id: 'irvan-gandaria',
+    pic: 'Irvan Gandaria',
+    outlets: ['TBM', 'NBM', 'PBM', 'MPP', 'PPM', 'MGAM', 'MGJY', 'MGNS', 'PKM', 'MGRA'],
+  },
+  {
+    id: 'arthur-sengkandai',
+    pic: 'Arthur Sengkandai',
+    outlets: ['MGKB', 'MGMM', 'MGNW', 'MGTO', 'MGGJ', 'MGBP', 'MGLG', 'MGMK', 'MGMP', 'MGSO'],
+  },
+];
+
+export function getPICForOutlet(code: OutletCode): string {
+  const g = PIC_GROUPS.find((grp) => grp.outlets.includes(code));
+  return g ? g.pic : 'Unassigned';
+}
 
 // Header Info Section (dengan Dynamic Spreadsheet URL)
 export interface HeaderInfo {

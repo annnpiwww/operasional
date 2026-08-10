@@ -2,7 +2,7 @@ import type { FullOperationalReport } from '../types'
 
 const fmtRp = (n: number) => n.toLocaleString('id-ID')
 const deltaRp = (n: number) =>
-  n > 0 ? `+Rp ${fmtRp(n)}` : n < 0 ? `−Rp ${fmtRp(Math.abs(n))}` : 'Rp 0'
+  n > 0 ? `+Rp ${fmtRp(n)}` : n < 0 ? `-Rp ${fmtRp(Math.abs(n))}` : 'Rp 0'
 
 function formatIndonesianDate(dateStr: string): string {
   if (!dateStr) return 'Senin, 10 Agustus 2026';
@@ -71,11 +71,16 @@ export function buildPlainText(report: FullOperationalReport): string {
     L.push('• Nihil / Belum ada laporan pendapatan')
   } else {
     incomes.forEach((inc) => {
+      const picLabel = inc.pic ? ` (PIC: ${inc.pic})` : ''
       if (inc.statusSync === 'Kendala') {
-        L.push(`• [${inc.lokasi}] ⚠️ KENDALA: ${inc.catatanKendala || 'Data Kosong / Akses Drop'}`)
+        L.push(`• *${inc.lokasi}*${picLabel}`)
+        L.push(`  - ⚠️ KENDALA: ${inc.catatanKendala || 'Data Kosong / Akses Drop'}`)
       } else {
-        const trendSymbol = inc.trend === 'Naik' ? '▲ Naik' : inc.trend === 'Turun' ? '▼ Turun' : '▬ Sama'
-        L.push(`• [${inc.lokasi}] Kemarin Rp ${fmtRp(inc.hariIni)} | Minggu lalu Rp ${fmtRp(inc.mingguLalu)} | Delta ${deltaRp(inc.delta)} (${trendSymbol})`)
+        const trendSymbol = inc.trend === 'Naik' ? 'Naik ↑' : inc.trend === 'Turun' ? 'Turun ↓' : 'Sama ▬'
+        L.push(`• *${inc.lokasi}*${picLabel}`)
+        L.push(`  - Hari Ini: Rp ${fmtRp(inc.hariIni)}`)
+        L.push(`  - Minggu Lalu: Rp ${fmtRp(inc.mingguLalu)}`)
+        L.push(`  - Selisih: ${deltaRp(inc.delta)} (${trendSymbol})`)
       }
     })
   }

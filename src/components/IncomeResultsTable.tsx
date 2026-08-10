@@ -98,7 +98,7 @@ export const IncomeResultsTable: React.FC<IncomeResultsTableProps> = ({ items, t
           </div>
 
           <div className="rounded-lg border border-line bg-ink-950 p-3.5">
-            <span className="text-[11px] text-mid block font-mono">Total Selisih (Delta Rp)</span>
+            <span className="text-[11px] text-mid block font-mono">Total Selisih (Rp)</span>
             <span className={`text-lg font-bold font-mono mt-1 block ${totalDelta >= 0 ? 'text-ok' : 'text-bad'}`}>
               {fmtDelta(totalDelta)}
             </span>
@@ -139,7 +139,7 @@ export const IncomeResultsTable: React.FC<IncomeResultsTableProps> = ({ items, t
                 <th className="py-2.5 px-3">Status Sync</th>
                 <th className="py-2.5 px-3">Kemarin ({yesterdayStr})</th>
                 <th className="py-2.5 px-3">Minggu Lalu ({priorWeekStr})</th>
-                <th className="py-2.5 px-3">Selisih Delta (Rp)</th>
+                <th className="py-2.5 px-3">Selisih (Rp)</th>
                 <th className="py-2.5 px-3">Tren Performa</th>
               </tr>
             </thead>

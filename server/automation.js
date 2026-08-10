@@ -12,6 +12,16 @@ const OUTLETS = [
   'MGJY', 'MGMP', 'MGNS', 'MGRA', 'MGSO'
 ];
 
+const PIC_GROUPS = [
+  { pic: 'Irvan Gandaria', outlets: ['TBM', 'NBM', 'PBM', 'MPP', 'PPM', 'MGAM', 'MGJY', 'MGNS', 'PKM', 'MGRA'] },
+  { pic: 'Arthur Sengkandai', outlets: ['MGKB', 'MGMM', 'MGNW', 'MGTO', 'MGGJ', 'MGBP', 'MGLG', 'MGMK', 'MGMP', 'MGSO'] },
+];
+
+function resolvePIC(outletCode) {
+  const grp = PIC_GROUPS.find((g) => g.outlets.includes(outletCode));
+  return grp ? grp.pic : 'Unassigned';
+}
+
 /**
  * EXACT REAL SPREADSHEET MATRIX DATA (Sheet: Rekapan Total Income)
  * Date Range: 08 Agustus 2026 (Kemarin / H-1) vs 01 Agustus 2026 (Minggu Lalu / H-7 dari Kemarin)
@@ -176,7 +186,7 @@ export async function runSpreadsheetAutomation(params, logCallback = () => {}) {
     const item = {
       id: `inc-${location}`,
       lokasi: location,
-      pic: `PIC ${location}`,
+      pic: resolvePIC(location),
       hariIni: valIncome,
       mingguLalu: mingguLaluVal,
       delta: deltaVal,
@@ -192,7 +202,7 @@ export async function runSpreadsheetAutomation(params, logCallback = () => {}) {
     const item = {
       id: `inc-${location}`,
       lokasi: location,
-      pic: `PIC ${location}`,
+      pic: resolvePIC(location),
       hariIni: exact.hariIni,
       mingguLalu: exact.mingguLalu,
       delta: exact.delta,
@@ -212,10 +222,11 @@ export async function runSpreadsheetAutomation(params, logCallback = () => {}) {
  * Returns EXACT REAL VALUES from sheet 'Rekapan Total Income'.
  */
 export async function runAllOutletsAutomation(params, logCallback = () => {}) {
-  const { date, spreadsheetUrl } = typeof params === 'object' ? params : { date: params };
+  const { date, spreadsheetUrl, outlets } = typeof params === 'object' ? params : { date: params };
   const targetUrl = spreadsheetUrl || DEFAULT_TARGET_URL;
   const reportDate = date || new Date().toISOString().split('T')[0];
   const { yesterdayStr, priorWeekStr } = getTargetDates(reportDate);
+  const targets = Array.isArray(outlets) && outlets.length ? OUTLETS.filter((o) => outlets.includes(o)) : OUTLETS;
 
   const log = (msg) => logCallback(`[${new Date().toISOString()}] ${msg}`);
   let browser = null;
@@ -236,15 +247,15 @@ export async function runAllOutletsAutomation(params, logCallback = () => {}) {
       await page.waitForTimeout(1500);
     }
 
-    log(`Comparing EXACT real income data: Kemarin (${yesterdayStr}) vs Minggu Lalu (${priorWeekStr}) across 20 outlets...`);
-    const incomes = OUTLETS.map((outlet) => {
+    log(`Comparing EXACT real income data: Kemarin (${yesterdayStr}) vs Minggu Lalu (${priorWeekStr}) across ${targets.length} outlet(s)...`);
+    const incomes = targets.map((outlet) => {
       const exact = getExactRealData(outlet, yesterdayStr, priorWeekStr);
       const isKendala = outlet === 'MGSO' && exact.mingguLalu === 0;
 
       return {
         id: `inc-${outlet}`,
         lokasi: outlet,
-        pic: `PIC ${outlet}`,
+        pic: resolvePIC(outlet),
         hariIni: exact.hariIni,
         mingguLalu: exact.mingguLalu,
         delta: exact.delta,
@@ -254,16 +265,16 @@ export async function runAllOutletsAutomation(params, logCallback = () => {}) {
       };
     });
 
-    log(`All 20 Outlets EXACT real income data successfully mapped! (Kemarin ${yesterdayStr} vs Minggu Lalu ${priorWeekStr})`);
+    log(`All ${targets.length} Outlets EXACT real income data successfully mapped! (Kemarin ${yesterdayStr} vs Minggu Lalu ${priorWeekStr})`);
     return { success: true, reportDate, yesterdayStr, priorWeekStr, incomes };
   } catch (err) {
     log(`Automation completed with resilient launcher mode: ${err.message}`);
-    const incomes = OUTLETS.map((outlet) => {
+    const incomes = targets.map((outlet) => {
       const exact = getExactRealData(outlet, yesterdayStr, priorWeekStr);
       return {
         id: `inc-${outlet}`,
         lokasi: outlet,
-        pic: `PIC ${outlet}`,
+        pic: resolvePIC(outlet),
         hariIni: exact.hariIni,
         mingguLalu: exact.mingguLalu,
         delta: exact.delta,

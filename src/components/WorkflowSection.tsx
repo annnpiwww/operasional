@@ -1,12 +1,13 @@
 import React from 'react';
-import { Play, RefreshCw, Layers, CheckCircle2 } from 'lucide-react';
-import { OUTLETS, OutletCode } from '../types';
+import { Play, RefreshCw, Layers, CheckCircle2, Users } from 'lucide-react';
+import { OUTLETS, PIC_GROUPS, OutletCode } from '../types';
 
 interface WorkflowSectionProps {
   selectedOutlet: OutletCode;
   onSelectOutlet: (outlet: OutletCode) => void;
   onSyncSingle: (outlet: OutletCode) => void;
   onSyncAll: () => void;
+  onSyncGroup: (outlets: OutletCode[], label: string) => void;
   isSyncing: boolean;
   hasData: boolean;
 }
@@ -16,6 +17,7 @@ export const WorkflowSection: React.FC<WorkflowSectionProps> = ({
   onSelectOutlet,
   onSyncSingle,
   onSyncAll,
+  onSyncGroup,
   isSyncing,
   hasData
 }) => {
@@ -103,6 +105,33 @@ export const WorkflowSection: React.FC<WorkflowSectionProps> = ({
             <p className="text-[11px] text-mid mt-0.5">Tabel 20 outlets & kalkulasi H-7 langsung tampil.</p>
           </div>
         </div>
+      </div>
+
+      {/* PIC Group Sync Buttons */}
+      <div>
+        <span className="label mb-1.5 block">Sync per PIC Group (Auto-mapping Lokasi):</span>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          {PIC_GROUPS.map((grp) => (
+            <button
+              key={grp.id}
+              type="button"
+              onClick={() => onSyncGroup(grp.outlets, grp.pic)}
+              disabled={isSyncing}
+              className="flex items-center justify-between gap-2 rounded-lg border border-line bg-ink-850 px-3 py-2 text-left transition-colors hover:border-accent/40 hover:bg-ink-800 disabled:opacity-50"
+            >
+              <span className="flex items-center gap-2">
+                <Users className="h-4 w-4 text-accent" />
+                <span className="text-xs font-semibold text-hi">Sync PIC: {grp.pic}</span>
+              </span>
+              <span className="rounded-full border border-accent/30 bg-accent/10 px-2 py-0.5 font-mono text-[10px] font-bold text-accent">
+                {grp.outlets.length} LOKASI
+              </span>
+            </button>
+          ))}
+        </div>
+        <p className="mt-1.5 text-[11px] text-low">
+          {PIC_GROUPS.map((grp) => `${grp.pic}: ${grp.outlets.join(', ')}`).join('  |  ')}
+        </p>
       </div>
 
       {/* Outlet Selector Chips */}
