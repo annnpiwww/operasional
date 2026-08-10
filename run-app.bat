@@ -12,6 +12,12 @@ IF NOT EXIST "node_modules\" (
   echo.
 )
 
+IF NOT EXIST "%LOCALAPPDATA%\ms-playwright\" (
+  echo [!] Browser Playwright belum ter-install. Menjalankan 'npx playwright install chromium'...
+  call npx playwright install chromium
+  echo.
+)
+
 echo [1/2] Memulai Server Backend (Port 3101)...
 start "Backend API Server" /min cmd /c "node server/index.js"
 
