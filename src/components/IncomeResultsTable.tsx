@@ -17,11 +17,34 @@ const TREND: Record<IncomeReportItem['trend'], { mark: string; cls: string }> = 
   Sama: { mark: '▬', cls: 'text-mid font-semibold' },
 };
 
+function getDatesFromReportDate(reportDateStr: string) {
+  const rDate = reportDateStr ? new Date(reportDateStr) : new Date();
+  if (isNaN(rDate.getTime())) {
+    const today = new Date();
+    const yest = new Date(today);
+    yest.setDate(today.getDate() - 1);
+    const prevWk = new Date(yest);
+    prevWk.setDate(yest.getDate() - 7);
+    return {
+      yesterdayStr: yest.toISOString().split('T')[0],
+      priorWeekStr: prevWk.toISOString().split('T')[0],
+    };
+  }
+
+  const yest = new Date(rDate);
+  yest.setDate(rDate.getDate() - 1);
+
+  const prevWk = new Date(yest);
+  prevWk.setDate(yest.getDate() - 7);
+
+  return {
+    yesterdayStr: yest.toISOString().split('T')[0],
+    priorWeekStr: prevWk.toISOString().split('T')[0],
+  };
+}
+
 export const IncomeResultsTable: React.FC<IncomeResultsTableProps> = ({ items, tanggalLaporan }) => {
-  const dateStr = tanggalLaporan || new Date().toISOString().split('T')[0];
-  const dateObj = new Date(dateStr);
-  dateObj.setDate(dateObj.getDate() - 7);
-  const h7DateStr = dateObj.toISOString().split('T')[0];
+  const { yesterdayStr, priorWeekStr } = getDatesFromReportDate(tanggalLaporan);
 
   // Calculated Metrics
   const totalHariIni = items.reduce((acc, curr) => acc + curr.hariIni, 0);
@@ -39,7 +62,7 @@ export const IncomeResultsTable: React.FC<IncomeResultsTableProps> = ({ items, t
             Hasil Otomatisasi Pendapatan (20 Outlets Rekapan Total Income)
           </h2>
           <p className="text-xs text-mid mt-0.5">
-            Komparasi Realtime: <span className="font-mono text-accent font-semibold">Hari Ini ({dateStr})</span> vs <span className="font-mono text-low font-semibold">Minggu Lalu H-7 ({h7DateStr})</span>
+            Komparasi Realtime: <span className="font-mono text-accent font-semibold">Hari Kemarin ({yesterdayStr})</span> vs <span className="font-mono text-low font-semibold">Minggu Lalu ({priorWeekStr})</span>
           </p>
         </div>
 
@@ -54,14 +77,14 @@ export const IncomeResultsTable: React.FC<IncomeResultsTableProps> = ({ items, t
       {items.length > 0 && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           <div className="rounded-lg border border-line bg-ink-950 p-3.5">
-            <span className="text-[11px] text-mid block font-mono">Total Omset Hari Ini ({dateStr})</span>
+            <span className="text-[11px] text-mid block font-mono">Total Omset Kemarin ({yesterdayStr})</span>
             <span className="text-lg font-bold font-mono text-accent mt-1 block">
               Rp {fmtRp(totalHariIni)}
             </span>
           </div>
 
           <div className="rounded-lg border border-line bg-ink-950 p-3.5">
-            <span className="text-[11px] text-mid block font-mono">Total Omset Minggu Lalu ({h7DateStr})</span>
+            <span className="text-[11px] text-mid block font-mono">Total Omset Minggu Lalu ({priorWeekStr})</span>
             <span className="text-lg font-bold font-mono text-mid mt-1 block">
               Rp {fmtRp(totalMingguLalu)}
             </span>
@@ -106,8 +129,8 @@ export const IncomeResultsTable: React.FC<IncomeResultsTableProps> = ({ items, t
               <tr>
                 <th className="py-2.5 px-3">No</th>
                 <th className="py-2.5 px-3">Kode Outlet</th>
-                <th className="py-2.5 px-3">Income Hari Ini ({dateStr})</th>
-                <th className="py-2.5 px-3">Income Minggu Lalu ({h7DateStr})</th>
+                <th className="py-2.5 px-3">Kemarin ({yesterdayStr})</th>
+                <th className="py-2.5 px-3">Minggu Lalu ({priorWeekStr})</th>
                 <th className="py-2.5 px-3">Selisih Delta (Rp)</th>
                 <th className="py-2.5 px-3">Tren Performa</th>
               </tr>
