@@ -7,6 +7,8 @@ on:
 
 jobs:
   build-windows:
+    permissions:
+      contents: write
     runs-on: windows-latest
     steps:
       - name: Checkout Repository
@@ -34,3 +36,15 @@ jobs:
           name: OperasionalAutomationApp-Windows-Setup
           path: dist-electron/*.exe
           if-no-files-found: warn
+
+      - name: Create GitHub Release with .exe Installer
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v1.0.0
+          name: 'Release v1.0.0 — Operasional Automation App (.exe)'
+          body: 'File installer Windows (.exe) resmi untuk tim operasional SPV PT Bahana Security Sistem.'
+          files: dist-electron/*.exe
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
