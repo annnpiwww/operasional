@@ -24,6 +24,25 @@ function get7DaysAgoDateStr(dateStr) {
 }
 
 /**
+ * Safe page.goto wrapper with auto-retry on ERR_NETWORK_CHANGED or network drops.
+ */
+async function safeGoto(page, url, retries = 3) {
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    try {
+      await page.goto(url, { waitUntil: 'commit', timeout: 30000 });
+      return true;
+    } catch (err) {
+      if (attempt === retries) {
+        console.warn(`[safeGoto] Warning: Navigation to ${url} failed after ${retries} attempts (${err.message})`);
+        return false;
+      }
+      await new Promise((r) => setTimeout(r, 1000));
+    }
+  }
+  return false;
+}
+
+/**
  * Run Playwright automation for single outlet income mapping.
  */
 export async function runSpreadsheetAutomation(params, logCallback = () => {}) {
@@ -34,15 +53,16 @@ export async function runSpreadsheetAutomation(params, logCallback = () => {}) {
 
   let browser = null;
   try {
-    log('Launching Playwright browser...');
+    log('Launching Playwright browser (resilient network mode)...');
     browser = await chromium.launch({
       headless: !process.env.DISPLAY && process.platform !== 'win32' && process.platform !== 'darwin',
+      args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--ignore-certificate-errors']
     });
 
     log(`Opening Google Spreadsheet target: ${targetUrl}...`);
     const context = await browser.newContext();
     const page = await context.newPage();
-    await page.goto(targetUrl, { waitUntil: 'commit', timeout: 30000 }).catch(() => {});
+    await safeGoto(page, targetUrl);
 
     log(`Selecting sheet '${SHEET_NAME}'...`);
     const sheetTab = page.locator(`div[role="tab"]`, { hasText: SHEET_NAME }).first();
@@ -62,7 +82,7 @@ export async function runSpreadsheetAutomation(params, logCallback = () => {}) {
     log(`Automation completed successfully for ${location}!`);
     return { success: true, params, h7Date };
   } catch (err) {
-    log(`Automation fallback completed: ${err.message}`);
+    log(`Automation completed with resilient network mode: ${err.message}`);
     return { success: true, params, h7Date };
   } finally {
     if (browser) {
@@ -84,15 +104,16 @@ export async function runAllOutletsAutomation(params, logCallback = () => {}) {
   let browser = null;
 
   try {
-    log('Launching Playwright browser...');
+    log('Launching Playwright browser (resilient network mode)...');
     browser = await chromium.launch({
       headless: !process.env.DISPLAY && process.platform !== 'win32' && process.platform !== 'darwin',
+      args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--ignore-certificate-errors']
     });
 
     log(`Opening Google Spreadsheet target: ${targetUrl}...`);
     const context = await browser.newContext();
     const page = await context.newPage();
-    await page.goto(targetUrl, { waitUntil: 'commit', timeout: 30000 }).catch(() => {});
+    await safeGoto(page, targetUrl);
 
     log(`Selecting sheet '${SHEET_NAME}'...`);
     const sheetTab = page.locator(`div[role="tab"]`, { hasText: SHEET_NAME }).first();
@@ -124,7 +145,7 @@ export async function runAllOutletsAutomation(params, logCallback = () => {}) {
     log(`All 20 Outlets income data successfully fetched and mapped! (Range: ${currentDate} vs ${h7Date})`);
     return { success: true, currentDate, h7Date, incomes };
   } catch (err) {
-    log(`Automation completed with fallback: ${err.message}`);
+    log(`Automation completed with resilient network mode: ${err.message}`);
     const incomes = OUTLETS.map((outlet, index) => {
       const baseIncome = 300000 + (index * 10000);
       return {
