@@ -127,6 +127,15 @@ export default function App() {
         if (Array.isArray(data.logs)) {
           data.logs.forEach((msg: string) => addLog('running', 'step', msg))
         }
+        if (data.item) {
+          setIncomes((prev) => {
+            const idx = prev.findIndex((x) => x.lokasi === data.item.lokasi)
+            if (idx === -1) return [...prev, data.item]
+            const next = [...prev]
+            next[idx] = data.item
+            return next
+          })
+        }
         addLog('success', 'selesai', `Data ${outlet} berhasil disinkronkan ke Rekapan Total Income!`)
       } else {
         addLog('failed', 'error', `Gagal: ${data.message || 'Server error'}`)

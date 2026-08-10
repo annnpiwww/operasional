@@ -1,152 +1,118 @@
 import type { FullOperationalReport } from '../types'
 
-/** Single source of truth untuk semua output laporan (plain text + markdown). */
-
 const fmtRp = (n: number) => n.toLocaleString('id-ID')
 const deltaRp = (n: number) =>
   n > 0 ? `+Rp ${fmtRp(n)}` : n < 0 ? `−Rp ${fmtRp(Math.abs(n))}` : 'Rp 0'
 
-const EMPTY: Record<string, string> = {
-  visit: 'Tidak ada catatan kunjungan lapangan hari ini.',
-  incident: 'Aman dan kondusif — tidak ada laporan insiden.',
-  maintenance: 'Tidak ada laporan perbaikan atau penambahan aksesoris.',
-  income: 'Data pendapatan belum disinkronkan dari Finance Sync.',
-  coordination: 'Tidak ada catatan koordinasi leader hari ini.',
+function formatIndonesianDate(dateStr: string): string {
+  if (!dateStr) return 'Senin, 10 Agustus 2026';
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return dateStr;
+  const formatted = d.toLocaleDateString('id-ID', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric'
+  });
+  return formatted;
 }
 
 export function buildPlainText(report: FullOperationalReport): string {
   const { header, visitPoints, incidents, maintenances, incomes, coordinations, summary } = report
   const L: string[] = []
-  const bar = '='.repeat(58)
-  const thin = '-'.repeat(58)
+  const separator = '━━━━━━━━━━━━━━━'
 
-  L.push('LAPORAN OPERASIONAL SPV — PT BAHANA SECURITY SISTEM')
-  L.push(bar)
-  L.push(`Tanggal Laporan : ${header.tanggalLaporan || 'Hari Ini'}`)
-  L.push(`Supervisor (SPV): ${header.namaSPV || '-'}`)
-  L.push(`Kantor Cabang   : ${header.kantorCabang}`)
-  L.push(`Status          : ${summary.statusOperasional.toUpperCase()}`)
+  const formattedDate = formatIndonesianDate(header.tanggalLaporan);
+
+  L.push('*LAPORAN OPERASIONAL HARIAN SUPERVISOR BSS PARKING*')
+  L.push(`*Tanggal:* ${formattedDate}`)
+  L.push(`*Supervisor:* ${header.namaSPV || '-'}`)
+  L.push(`*Area/Cabang:* ${header.kantorCabang || 'KC SulutGoTengPa'}`)
+  L.push(`*Status Operasional:* ${summary.statusOperasional}`)
+  L.push(separator)
   L.push('')
 
-  L.push('1. VISIT LOKASI & MONITORING FIELD')
-  L.push(thin)
-  if (visitPoints.length === 0) L.push(`- ${EMPTY.visit}`)
-  else visitPoints.forEach((v, i) => L.push(`${i + 1}. [${v.lokasi}] ${v.catatan || '-'}`))
-  L.push('')
-
-  L.push('2. LAPORAN KEJADIAN (INCIDENT REPORT)')
-  L.push(thin)
-  if (incidents.length === 0) L.push(`- ${EMPTY.incident}`)
-  else incidents.forEach((inc, i) => L.push(`${i + 1}. [${inc.lokasi}] ${inc.jenisKejadian} — ${inc.statusPenanganan}`))
-  L.push('')
-
-  L.push('3. PERBAIKAN & PENAMBAHAN AKSESORIS')
-  L.push(thin)
-  if (maintenances.length === 0) L.push(`- ${EMPTY.maintenance}`)
-  else maintenances.forEach((m, i) => L.push(`${i + 1}. [${m.lokasi}] ${m.perbaikan} — ${m.status}`))
-  L.push('')
-
-  L.push('4. REKAPAN PENDAPATAN (FINANCE SYNC)')
-  L.push(thin)
-  if (incomes.length === 0) L.push(`- ${EMPTY.income}`)
-  else {
-    incomes.forEach((inc, i) => {
-      L.push(`${i + 1}. [${inc.lokasi}] Hari ini Rp ${fmtRp(inc.hariIni)} | Minggu lalu Rp ${fmtRp(inc.mingguLalu)} | Delta ${deltaRp(inc.delta)} (${inc.trend})`)
+  // 1. Visit Lokasi
+  L.push('*1. VISIT LOKASI & MONITORING:*')
+  if (visitPoints.length === 0) {
+    L.push('• Nihil / Tidak ada catatan monitoring')
+  } else {
+    visitPoints.forEach((v) => {
+      L.push(`• [${v.lokasi}] ${v.catatan || '-'}`)
     })
-    const totHariIni = incomes.reduce((a, x) => a + x.hariIni, 0)
-    const totMingguLalu = incomes.reduce((a, x) => a + x.mingguLalu, 0)
-    L.push(`TOTAL: Hari ini Rp ${fmtRp(totHariIni)} | Minggu lalu Rp ${fmtRp(totMingguLalu)} | Delta ${deltaRp(totHariIni - totMingguLalu)}`)
   }
   L.push('')
 
-  L.push('5. LAPORAN KOORDINASI LEADER / ADMIN')
-  L.push(thin)
-  if (coordinations.length === 0) L.push(`- ${EMPTY.coordination}`)
-  else coordinations.forEach((c, i) => L.push(`${i + 1}. [${c.lokasi}] ${c.hasilKegiatan}`))
+  // 2. Incident Report
+  L.push('*2. INCIDENT REPORT (LAPORAN KEJADIAN):*')
+  if (incidents.length === 0) {
+    L.push('• Nihil / Tidak ada laporan kejadian')
+  } else {
+    incidents.forEach((inc) => {
+      L.push(`• [${inc.lokasi}] ${inc.jenisKejadian} (${inc.statusPenanganan})`)
+    })
+  }
   L.push('')
 
-  L.push('6. CATATAN & KESIMPULAN AKHIR SPV')
-  L.push(thin)
-  L.push(`- Status Operasional : ${summary.statusOperasional}`)
-  L.push(`- Kendala Tindak Lanjut: ${summary.kendala.trim() || '-'}`)
-  L.push(`- Kebutuhan Lokasi    : ${summary.kebutuhan.trim() || '-'}`)
-  L.push(`- Rencana Tindak Lanjut: ${summary.rencanaTindakLanjut.trim() || '-'}`)
+  // 3. Perbaikan & Aksesoris
+  L.push('*3. PERBAIKAN & PENAMBAHAN AKSESORIS:*')
+  if (maintenances.length === 0) {
+    L.push('• Nihil / Tidak ada perbaikan alat')
+  } else {
+    maintenances.forEach((m) => {
+      L.push(`• [${m.lokasi}] ${m.perbaikan} (${m.status})`)
+    })
+  }
   L.push('')
-  L.push(bar)
+
+  // 4. Laporan Pendapatan
+  L.push('*4. LAPORAN PENDAPATAN:*')
+  if (incomes.length === 0) {
+    L.push('• Nihil / Belum ada laporan pendapatan')
+  } else {
+    incomes.forEach((inc) => {
+      if (inc.statusSync === 'Kendala') {
+        L.push(`• [${inc.lokasi}] ⚠️ KENDALA: ${inc.catatanKendala || 'Data Kosong / Akses Drop'}`)
+      } else {
+        const trendSymbol = inc.trend === 'Naik' ? '▲ Naik' : inc.trend === 'Turun' ? '▼ Turun' : '▬ Sama'
+        L.push(`• [${inc.lokasi}] Kemarin Rp ${fmtRp(inc.hariIni)} | Minggu lalu Rp ${fmtRp(inc.mingguLalu)} | Delta ${deltaRp(inc.delta)} (${trendSymbol})`)
+      }
+    })
+  }
+  L.push('')
+
+  // 5. Laporan Koordinasi Leader/Admin
+  L.push('*5. LAPORAN KOORDINASI LEADER/ADMIN:*')
+  if (coordinations.length === 0) {
+    L.push('• Nihil')
+  } else {
+    coordinations.forEach((c) => {
+      L.push(`• [${c.lokasi}] ${c.hasilKegiatan}`)
+    })
+  }
+  L.push('')
+
+  // 6. Catatan SPV
+  L.push('*6. CATATAN SPV:*')
+  L.push(`• *Kendala:* ${summary.kendala.trim() || 'Nihil'}`)
+  L.push(`• *Kebutuhan:* ${summary.kebutuhan.trim() || 'Nihil'}`)
+  L.push(`• *Rencana Tindak Lanjut:* ${summary.rencanaTindakLanjut.trim() || 'Nihil'}`)
+  L.push('')
+
+  // Kesimpulan Akhir (Custom atau Default Template)
+  L.push('*Kesimpulan Akhir:*')
+  if (summary.customKesimpulan && summary.customKesimpulan.trim()) {
+    L.push(`"${summary.customKesimpulan.trim()}"`)
+  } else {
+    L.push(`"Operasional pada tanggal ${formattedDate} berjalan ${summary.statusOperasional}. Seluruh temuan telah dikoordinasikan dengan Leader/Admin dan akan dimonitor hingga tindak lanjut selesai."`)
+  }
+  L.push(separator)
 
   return L.join('\n')
 }
 
 export function buildMarkdown(report: FullOperationalReport): string {
-  const { header, visitPoints, incidents, maintenances, incomes, coordinations, summary } = report
-  const M: string[] = []
-
-  M.push('# Laporan Operasional SPV — PT Bahana Security Sistem')
-  M.push('')
-  M.push(`> **Kantor Cabang:** \`${header.kantorCabang}\`  `)
-  M.push(`> **Tanggal Laporan:** \`${header.tanggalLaporan || 'Hari Ini'}\`  `)
-  M.push(`> **Supervisor (SPV):** \`${header.namaSPV || 'Belum diisi'}\`  `)
-  M.push(`> **Status Operasional:** **\`${summary.statusOperasional.toUpperCase()}\`**`)
-  M.push('')
-  M.push('---')
-  M.push('')
-
-  M.push('## 1. Visit Lokasi & Monitoring Field')
-  M.push('')
-  if (visitPoints.length === 0) M.push(`*${EMPTY.visit}*`)
-  else visitPoints.forEach((v, i) => M.push(`${i + 1}. **[${v.lokasi}]** ${v.catatan || '-'}`))
-  M.push('')
-
-  M.push('## 2. Laporan Kejadian (Incident Report)')
-  M.push('')
-  if (incidents.length === 0) M.push(`*${EMPTY.incident}*`)
-  else {
-    M.push('| Lokasi | Jenis Kejadian | Status Penanganan |')
-    M.push('| :--- | :--- | :--- |')
-    incidents.forEach((inc) => M.push(`| **${inc.lokasi}** | ${inc.jenisKejadian} | \`${inc.statusPenanganan}\` |`))
-  }
-  M.push('')
-
-  M.push('## 3. Perbaikan & Penambahan Aksesoris')
-  M.push('')
-  if (maintenances.length === 0) M.push(`*${EMPTY.maintenance}*`)
-  else {
-    M.push('| Lokasi | Perbaikan / Aksesoris | Status |')
-    M.push('| :--- | :--- | :--- |')
-    maintenances.forEach((m) => M.push(`| **${m.lokasi}** | ${m.perbaikan} | \`${m.status}\` |`))
-  }
-  M.push('')
-
-  M.push('## 4. Rekapan Pendapatan (Finance Sync)')
-  M.push('')
-  if (incomes.length === 0) M.push(`*${EMPTY.income}*`)
-  else {
-    M.push('| Outlet | Hari Ini | Minggu Lalu | Delta | Tren |')
-    M.push('| :--- | ---: | ---: | ---: | :---: |')
-    incomes.forEach((inc) =>
-      M.push(`| **${inc.lokasi}** | Rp ${fmtRp(inc.hariIni)} | Rp ${fmtRp(inc.mingguLalu)} | ${deltaRp(inc.delta)} | **${inc.trend}** |`),
-    )
-    const totHariIni = incomes.reduce((a, x) => a + x.hariIni, 0)
-    const totMingguLalu = incomes.reduce((a, x) => a + x.mingguLalu, 0)
-    M.push('')
-    M.push(`**Total:** Rp ${fmtRp(totHariIni)} (hari ini) · Rp ${fmtRp(totMingguLalu)} (minggu lalu) · ${deltaRp(totHariIni - totMingguLalu)} (delta)`)
-  }
-  M.push('')
-
-  M.push('## 5. Laporan Koordinasi Leader / Admin')
-  M.push('')
-  if (coordinations.length === 0) M.push(`*${EMPTY.coordination}*`)
-  else coordinations.forEach((c, i) => M.push(`${i + 1}. **[${c.lokasi}]** ${c.hasilKegiatan}`))
-  M.push('')
-
-  M.push('## 6. Catatan & Kesimpulan Akhir SPV')
-  M.push('')
-  M.push(`- **Status Operasional:** ${summary.statusOperasional}`)
-  M.push(`- **Kendala Tindak Lanjut:** ${summary.kendala.trim() || '-'}`)
-  M.push(`- **Kebutuhan Lokasi:** ${summary.kebutuhan.trim() || '-'}`)
-  M.push(`- **Rencana Tindak Lanjut:** ${summary.rencanaTindakLanjut.trim() || '-'}`)
-
-  return M.join('\n')
+  return buildPlainText(report);
 }
 
 export async function copyText(text: string): Promise<boolean> {

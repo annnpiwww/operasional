@@ -15,10 +15,10 @@ app.get('/api/health', (req, res) => {
 app.post('/api/automate', async (req, res) => {
   const { location, date, income, shift, notes, spreadsheetUrl } = req.body;
 
-  if (!location || !income) {
+  if (!location) {
     return res.status(400).json({
       success: false,
-      message: 'Lokasi dan nominal income wajib diisi.',
+      message: 'Lokasi wajib diisi.',
     });
   }
 
@@ -33,7 +33,7 @@ app.post('/api/automate', async (req, res) => {
       { location, date, income, shift, notes, spreadsheetUrl },
       logCallback
     );
-    res.json({ success: true, logs, data: result });
+    res.json({ success: true, logs, data: result, item: result.item });
   } catch (err) {
     res.status(500).json({
       success: false,

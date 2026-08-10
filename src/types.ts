@@ -11,7 +11,7 @@ export interface Outlet {
 
 export const OUTLETS: Outlet[] = [
   'TBM', 'NBM', 'PBM', 'PPM', 'PKM', 'MPP',
-  'MGKB', 'MGAM', 'MGMM', 'MGNW', 'MGTO', 'MGGJ', 'MGBP', 'MGLG',
+  'MGKB', 'MGAM', 'MGMM', 'MGNW', 'MGTO', 'MGBP', 'MGLG',
   'MGMP', 'MGMK', 'MGJY', 'MGNS', 'MGRA', 'MGSO',
 ].map((code, i) => ({
   code: code as OutletCode,
@@ -49,7 +49,7 @@ export interface MaintenanceItem {
   status: 'Selesai' | 'On Progress' | 'Pending';
 }
 
-// Modul 4: Laporan Pendapatan (Finance Sync)
+// Modul 4: Laporan Pendapatan (Finance Sync - per Outlet Status)
 export interface IncomeReportItem {
   id: string;
   lokasi: OutletCode;
@@ -58,6 +58,8 @@ export interface IncomeReportItem {
   mingguLalu: number;
   delta: number;
   trend: 'Naik' | 'Turun' | 'Sama';
+  statusSync?: 'Sukses' | 'Kendala' | 'Pending';
+  catatanKendala?: string;
 }
 
 // Modul 5: Laporan Koordinasi Leader/Admin
@@ -75,6 +77,7 @@ export interface SPVFinalSummary {
   kebutuhan: string;
   rencanaTindakLanjut: string;
   statusOperasional: OperationalStatus;
+  customKesimpulan?: string;
 }
 
 // Full Composite Report State

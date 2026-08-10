@@ -1,6 +1,6 @@
 import React from 'react';
 import { IncomeReportItem } from '../types';
-import { TrendingUp, TrendingDown, BarChart3, AlertCircle } from 'lucide-react';
+import { BarChart3, AlertCircle, AlertTriangle, CheckCircle2 } from 'lucide-react';
 
 interface IncomeResultsTableProps {
   items: IncomeReportItem[];
@@ -50,8 +50,8 @@ export const IncomeResultsTable: React.FC<IncomeResultsTableProps> = ({ items, t
   const totalHariIni = items.reduce((acc, curr) => acc + curr.hariIni, 0);
   const totalMingguLalu = items.reduce((acc, curr) => acc + curr.mingguLalu, 0);
   const totalDelta = totalHariIni - totalMingguLalu;
-  const countNaik = items.filter((i) => i.trend === 'Naik').length;
-  const countTurun = items.filter((i) => i.trend === 'Turun').length;
+  const countSukses = items.filter((i) => i.statusSync === 'Sukses' || !i.statusSync).length;
+  const countKendala = items.filter((i) => i.statusSync === 'Kendala').length;
 
   return (
     <section className="panel p-5 space-y-4">
@@ -67,9 +67,16 @@ export const IncomeResultsTable: React.FC<IncomeResultsTableProps> = ({ items, t
         </div>
 
         {items.length > 0 && (
-          <span className="font-mono text-xs font-semibold text-ok bg-ok/10 border border-ok/30 px-3 py-1 rounded-full">
-            ✅ 20 / 20 Outlets Ter-sync Otomatis
-          </span>
+          <div className="flex items-center gap-2 font-mono text-xs font-semibold">
+            <span className="text-ok bg-ok/10 border border-ok/30 px-3 py-1 rounded-full flex items-center gap-1">
+              <CheckCircle2 className="h-3.5 w-3.5" /> {countSukses} Sukses
+            </span>
+            {countKendala > 0 && (
+              <span className="text-bad bg-bad/10 border border-bad/30 px-3 py-1 rounded-full flex items-center gap-1">
+                <AlertTriangle className="h-3.5 w-3.5" /> {countKendala} Kendala
+              </span>
+            )}
+          </div>
         )}
       </div>
 
@@ -99,10 +106,10 @@ export const IncomeResultsTable: React.FC<IncomeResultsTableProps> = ({ items, t
 
           <div className="rounded-lg border border-line bg-ink-950 p-3.5 flex items-center justify-between">
             <div>
-              <span className="text-[11px] text-mid block font-mono">Performa Outlets</span>
-              <div className="flex items-center gap-3 mt-1 font-mono text-xs font-semibold">
-                <span className="text-ok flex items-center gap-1"><TrendingUp className="h-3.5 w-3.5" /> {countNaik} Naik</span>
-                <span className="text-bad flex items-center gap-1"><TrendingDown className="h-3.5 w-3.5" /> {countTurun} Turun</span>
+              <span className="text-[11px] text-mid block font-mono">Status Sync Outlets</span>
+              <div className="flex items-center gap-2 mt-1 font-mono text-xs font-semibold">
+                <span className="text-ok flex items-center gap-1"><CheckCircle2 className="h-3.5 w-3.5" /> {countSukses} Ter-sync</span>
+                {countKendala > 0 && <span className="text-bad flex items-center gap-1"><AlertTriangle className="h-3.5 w-3.5" /> {countKendala} Kendala</span>}
               </div>
             </div>
           </div>
@@ -129,6 +136,7 @@ export const IncomeResultsTable: React.FC<IncomeResultsTableProps> = ({ items, t
               <tr>
                 <th className="py-2.5 px-3">No</th>
                 <th className="py-2.5 px-3">Kode Outlet</th>
+                <th className="py-2.5 px-3">Status Sync</th>
                 <th className="py-2.5 px-3">Kemarin ({yesterdayStr})</th>
                 <th className="py-2.5 px-3">Minggu Lalu ({priorWeekStr})</th>
                 <th className="py-2.5 px-3">Selisih Delta (Rp)</th>
@@ -138,13 +146,27 @@ export const IncomeResultsTable: React.FC<IncomeResultsTableProps> = ({ items, t
             <tbody className="divide-y divide-line/60">
               {items.map((item, idx) => {
                 const tr = TREND[item.trend];
+                const isKendala = item.statusSync === 'Kendala';
                 return (
-                  <tr key={item.lokasi} className="hover:bg-ink-850/50 transition-colors">
+                  <tr key={item.lokasi} className={`hover:bg-ink-850/50 transition-colors ${isKendala ? 'bg-bad/5' : ''}`}>
                     <td className="py-2.5 px-3 text-low">{String(idx + 1).padStart(2, '0')}</td>
                     <td className="py-2.5 px-3 font-bold text-accent">{item.lokasi}</td>
-                    <td className="py-2.5 px-3 text-hi font-bold">Rp {fmtRp(item.hariIni)}</td>
+                    <td className="py-2.5 px-3">
+                      {isKendala ? (
+                        <span className="inline-flex items-center gap-1 font-semibold text-bad bg-bad/10 px-2 py-0.5 rounded border border-bad/30 text-[10px]" title={item.catatanKendala}>
+                          <AlertTriangle className="h-3 w-3" /> KENDALA
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 font-semibold text-ok bg-ok/10 px-2 py-0.5 rounded border border-ok/30 text-[10px]">
+                          <CheckCircle2 className="h-3 w-3" /> OK
+                        </span>
+                      )}
+                    </td>
+                    <td className="py-2.5 px-3 text-hi font-bold">
+                      {isKendala ? <span className="text-bad text-[11px]">{item.catatanKendala || 'Data Kosong'}</span> : `Rp ${fmtRp(item.hariIni)}`}
+                    </td>
                     <td className="py-2.5 px-3 text-mid">Rp {fmtRp(item.mingguLalu)}</td>
-                    <td className={`py-2.5 px-3 font-semibold ${item.delta > 0 ? 'text-ok' : item.delta < 0 ? 'text-bad' : 'text-mid'}`}>
+                    <td className={`py-2.5 px-3 font-semibold ${isKendala ? 'text-bad' : item.delta > 0 ? 'text-ok' : item.delta < 0 ? 'text-bad' : 'text-mid'}`}>
                       {fmtDelta(item.delta)}
                     </td>
                     <td className="py-2.5 px-3">
