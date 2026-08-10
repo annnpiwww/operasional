@@ -20,20 +20,21 @@ jobs:
       - name: Install Rust Toolchain
         uses: dtolnay/rust-toolchain@stable
 
-      - name: Install Dependencies
+      - name: Install Node Dependencies
         run: npm install
 
       - name: Build Web App Dist
         run: npm run build
 
-      - name: Build Standalone Windows Executable (.exe)
-        run: npx @tauri-apps/cli build --no-bundle
+      - name: Compile Windows Native Binary (.exe)
+        working-directory: src-tauri
+        run: cargo build --release
 
       - name: Upload Executable Artifact (.exe)
         uses: actions/upload-artifact@v4
         with:
           name: OperasionalAutomationApp-Windows-Exe
           path: |
+            src-tauri/target/release/operasional-automation-app.exe
             src-tauri/target/release/*.exe
-            src-tauri/target/release/bundle/**/*.exe
           if-no-files-found: warn
