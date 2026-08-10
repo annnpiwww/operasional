@@ -1,4 +1,4 @@
-name: Build Tauri Windows Executable (.exe)
+name: Build Windows Desktop Executable (.exe)
 
 on:
   push:
@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-tauri:
+  build-windows:
     runs-on: windows-latest
     steps:
       - name: Checkout Repository
@@ -17,23 +17,20 @@ jobs:
         with:
           node-version: 22
 
-      - name: Install Rust Toolchain
-        uses: dtolnay/rust-toolchain@stable
-
-      - name: Install Node Dependencies
+      - name: Install Dependencies
         run: npm install
 
       - name: Build Web App Dist
         run: npm run build
 
-      - name: Compile Windows Native Executable (.exe)
-        working-directory: src-tauri
-        run: cargo build --release
+      - name: Package Windows Executable Installer (.exe)
+        run: npx electron-builder --win nsis
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Upload Executable Artifact (.exe)
+      - name: Upload Artifact Windows (.exe)
         uses: actions/upload-artifact@v4
         with:
-          name: OperasionalAutomationApp-Windows-Exe
-          path: |
-            src-tauri/target/release/*.exe
+          name: OperasionalAutomationApp-Windows-Setup
+          path: dist-electron/*.exe
           if-no-files-found: warn
